@@ -574,13 +574,13 @@ d3sparql.piechart = function(json, config) {
 
   var radius = Math.min(opts.width, opts.height) / 2 - opts.margin
   var hole = Math.max(Math.min(radius - 50, opts.hole), 0)
-  var color = d3.scale.category20()
+  var color = d3.schemeCategory20
 
-  var arc = d3.svg.arc()
+  var arc = d3.arc()
     .outerRadius(radius)
     .innerRadius(hole)
 
-  var pie = d3.layout.pie()
+  var pie = d3.pie()
     //.sort(null)
     .value(function(d) { return d[opts.size].value })
 
@@ -597,7 +597,7 @@ d3sparql.piechart = function(json, config) {
     .attr("class", "arc")
   var slice = g.append("path")
     .attr("d", arc)
-    .attr("fill", function(d, i) { return color(i) })
+    .attr("fill", function(d, i) { return color[i % 20] })
   var text = g.append("text")
     .attr("class", "label")
     .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")" })
@@ -606,11 +606,11 @@ d3sparql.piechart = function(json, config) {
     .text(function(d) { return d.data[opts.label].value })
 
   // default CSS/SVG
-  slice.attr({
+  slice.attrs({
     "stroke": "#ffffff",
   })
   // TODO: not working?
-  svg.selectAll("text").attr({
+  svg.selectAll("text").attrs({
     "stroke": "none",
     "fill": "black",
     "font-size": "20px",
