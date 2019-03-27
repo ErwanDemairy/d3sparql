@@ -58,11 +58,18 @@ var d3sparql = {
 d3sparql.fetch = function(url, callback) {
   if (d3sparql.debug) { console.log(url) }
   var mime = "application/sparql-results+json"
-  d3.xhr(url, mime, function(request) {
-    var json = request.responseText
-    if (d3sparql.debug) { console.log(json) }
-    callback(JSON.parse(json))
-  })
+  d3.request(url)
+      .mimeType(mime)
+      .response(function(request) {
+        var json = request.responseText
+        if (d3sparql.debug) { console.log(json) }
+        callback(JSON.parse(json))
+      }).get() ;
+  // d3.xhr(url, mime, function(request) {
+  //   var json = request.responseText
+  //   if (d3sparql.debug) { console.log(json) }
+  //   callback(JSON.parse(json))
+  // })
 /*
   // d3.json sometimes fails to retrieve "application/sparql-results+json" as it is designed for "application/json"
   d3.json(url, function(error, json) {
@@ -434,10 +441,14 @@ d3sparql.barchart = function(json, config) {
     "selector": config.selector || null
   }
 
-  var scale_x = d3.scale.ordinal().rangeRoundBands([0, opts.width - opts.margin], 0.1)
-  var scale_y = d3.scale.linear().range([opts.height - opts.margin, 0])
-  var axis_x = d3.svg.axis().scale(scale_x).orient("bottom")
-  var axis_y = d3.svg.axis().scale(scale_y).orient("left")  // .ticks(10, "%")
+  // var scale_x = d3.scale.ordinal().rangeRoundBands([0, opts.width - opts.margin], 0.1)
+  var scale_x = d3.scaleBand().range([0, opts.width - opts.margin]).round(0.1);
+  // var scale_y = d3.scale.linear().range([opts.height - opts.margin, 0])
+  var scale_y = d3.scaleLinear().range([opts.height - opts.margin, 0]);
+  var axis_x = d3.axisBottom(scale_x);
+  var axis_y = d3.axisLeft(scale_y);
+  // var axis_x = d3.svg.axis().scale(scale_x).orient("bottom")
+  // var axis_y = d3.svg.axis().scale(scale_y).orient("left")  // .ticks(10, "%")
   scale_x.domain(data.map(function(d) { return d[opts.var_x].value }))
   scale_y.domain(d3.extent(data, function(d) { return parseInt(d[opts.var_y].value) }))
 
@@ -462,7 +473,8 @@ d3sparql.barchart = function(json, config) {
     .attr("transform", "translate(" + opts.margin + "," + 0 + ")")
     .attr("class", "bar")
     .attr("x", function(d) { return scale_x(d[opts.var_x].value) })
-    .attr("width", scale_x.rangeBand())
+    // .attr("width", scale_x.rangeBand())
+      .attr("width", scale_x.bandwidth())
     .attr("y", function(d) { return scale_y(d[opts.var_y].value) })
     .attr("height", function(d) { return opts.height - scale_y(parseInt(d[opts.var_y].value)) - opts.margin })
 /*
@@ -492,15 +504,15 @@ d3sparql.barchart = function(json, config) {
     .attr("y", 0 - (opts.margin - 20))
 
   // default CSS/SVG
-  bar.attr({
+  bar.attrs({
     "fill": "steelblue",
   })
-  svg.selectAll(".axis").attr({
+  svg.selectAll(".axis").attrs({
     "stroke": "black",
     "fill": "none",
     "shape-rendering": "crispEdges",
   })
-  svg.selectAll("text").attr({
+  svg.selectAll("text").attrs({
     "stroke": "none",
     "fill": "black",
     "font-size": "8pt",
